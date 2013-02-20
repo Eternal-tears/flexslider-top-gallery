@@ -25,8 +25,9 @@ function flexslider_gallery_top() {
 
 global $wp_query;
 $wp_query = new WP_Query(array(
-	'cat' => '12',
+	'cat' => get_option('flexslidertopgallery_categoryid'),
 	//'post__in' => array(get_option('flexslidertopgallery_includepost')),
+	//'p' => get_option('flexslidertopgallery_includepost'),
 	//'post__not_in' => array(get_option('flexslidertopgallery_excludepost')),
 	'post_type'=> 'post',
 	'orderby' => 'rand',
@@ -41,17 +42,15 @@ while ( have_posts() ) : the_post();
 	'post_parent' => $post->ID,
 	'post_type' => 'attachment',
 	'post_mime_type' => 'image',
-	//'posts_per_page'=> 999
 	'orderby' => 'rand',
-	'posts_per_page'=> get_option('flexslidertopgallery_viewcount')
+	'posts_per_page'=> get_option('flexslidertopgallery_viewimgcount')
 	));
 
 	foreach ($fimages as $image) {
 		$top_attributes = wp_get_attachment_image_src($image->ID,'flexslider_topimg');
-		//$top_attributes = array_rand($top_attributes1,get_option('flexslidertopgallery_viewcount'));
 
 echo '<pre>';
-var_dump($top_attributes);
+var_dump(get_option('flexslidertopgallery_categoryid'));
 echo '</pre>';
 
 		//サムネイル画像の表示部分
@@ -123,6 +122,7 @@ function flexslidertopgallery_admin_page() {
 	$flexsilder_excludepost = get_option('flexslidertopgallery_excludepost',null);
 	$flexsilder_categoryid = get_option('flexslidertopgallery_categoryid',null);
 	$flexsilder_viewcount = get_option('flexslidertopgallery_viewcount',5);
+	$flexsilder_viewimgcount = get_option('flexslidertopgallery_viewimgcount',5);
 	$flexsilder_topwidth = get_option('flexslidertopgallery_topwidth',700);
 	$flexsilder_topheight = get_option('flexslidertopgallery_topheight',200);
 
@@ -133,6 +133,7 @@ function flexslidertopgallery_admin_page() {
 		$flexsilder_excludepost = stripslashes($_POST['excludepost']);
 		$flexsilder_categoryid = stripslashes($_POST['categoryid']);
 		$flexsilder_viewcount = stripslashes($_POST['viewcount']);
+		$flexsilder_viewimgcount = stripslashes($_POST['viewimgcount']);
 		$flexsilder_topwidth = stripslashes($_POST['topwidth']);
 		$flexsilder_topheight = stripslashes($_POST['topheight']);
 
@@ -140,6 +141,7 @@ function flexslidertopgallery_admin_page() {
 		update_option('flexslidertopgallery_excludepost', $flexsilder_excludepost);
 		update_option('flexslidertopgallery_categoryid', $flexsilder_categoryid);
 		update_option('flexslidertopgallery_viewcount', $flexsilder_viewcount);
+		update_option('flexslidertopgallery_viewimgcount', $flexsilder_viewimgcount);
 		update_option('flexslidertopgallery_topwidth', $flexsilder_topwidth);
 		update_option('flexslidertopgallery_topheight', $flexsilder_topheight);
 	}
@@ -153,6 +155,15 @@ function flexslidertopgallery_admin_page() {
 	<form method="post" action="<?php echo str_replace( '%7E', '~', $_SERVER['REQUEST_URI']); ?>">
 		<input type="hidden" name="posted" value="Y">
 		<table class="form-table">
+			<tr valign="top">
+				<th scope="row"><?php echo __( 'ギャラリーのメイン画像サイズ', 'flexslidertopgallery' ); ?></th>
+				<td>
+					<label for="topwidth">幅</label>
+					<input name="topwidth" type="number" id="topwidth" value="<?php echo esc_attr($flexsilder_topwidth); ?>" class="small-text" />
+					<label for="topheight">高さ</label>
+					<input name="topheight" type="number" id="topheight" value="<?php echo esc_attr($flexsilder_topheight); ?>" class="small-text" /><br />
+				</td>
+			</tr>
 
 			<tr valign="top">
 				<th scope="row"><label for="includepost"><?php echo __( 'インクルードする記事ID、ページID', 'flexslidertopgallery' ); ?><label></th>
@@ -179,11 +190,12 @@ function flexslidertopgallery_admin_page() {
 			</tr>
 
 			<tr valign="top">
-				<th scope="row"><legend for="viewcount"><?php echo __( '切り替える画像数', 'flexslidertopgallery' ); ?></legend></th>
+				<th scope="row"><legend for="viewcount"><?php echo __( '対象記事数', 'flexslidertopgallery' ); ?></legend></th>
 				<td>
 					<select name="viewcount" id="viewcount">
 					<?php
 						$options = array(
+							array('value' => '-1', 'text' => '全記事'),
 							array('value' => '1', 'text' => '1件'),
 							array('value' => '2', 'text' => '2件'),
 							array('value' => '3', 'text' => '3件'),
@@ -199,20 +211,35 @@ function flexslidertopgallery_admin_page() {
 						<option value="<?php echo esc_attr($option['value']); ?>"<?php if ($flexsilder_viewcount == $option['value']) : ?> selected="selected"<?php endif; ?>><?php echo esc_attr($option['text']); ?></option>
 					<?php endforeach; ?>
 					</select><br />
-					<?php echo __( '切り替える画像表示数を指定します。', 'flexslidergallery' ); ?>
+					<?php echo __( '対象にする記事の数を指定します。', 'flexslidergallery' ); ?>
 				</td>
 			</tr>
 
 			<tr valign="top">
-				<th scope="row"><?php echo __( 'ギャラリーのメイン画像サイズ', 'flexslidertopgallery' ); ?></th>
+				<th scope="row"><legend for="viewimgcount"><?php echo __( '対象画像数', 'flexslidertopgallery' ); ?></legend></th>
 				<td>
-					<label for="topwidth">幅</label>
-					<input name="topwidth" type="number" id="topwidth" value="<?php echo esc_attr($flexsilder_topwidth); ?>" class="small-text" />
-					<label for="topheight">高さ</label>
-					<input name="topheight" type="number" id="topheight" value="<?php echo esc_attr($flexsilder_topheight); ?>" class="small-text" /><br />
+					<select name="viewimgcount" id="viewimgcount">
+					<?php
+						$options = array(
+							array('value' => '-1', 'text' => '全画像'),
+							array('value' => '1', 'text' => '1件'),
+							array('value' => '2', 'text' => '2件'),
+							array('value' => '3', 'text' => '3件'),
+							array('value' => '4', 'text' => '4件'),
+							array('value' => '5', 'text' => '5件'),
+							array('value' => '6', 'text' => '6件'),
+							array('value' => '7', 'text' => '7件'),
+							array('value' => '8', 'text' => '8件'),
+							array('value' => '9', 'text' => '9件'),
+							array('value' => '10', 'text' => '10件'),
+						);
+						foreach ($options as $option) : ?>
+						<option value="<?php echo esc_attr($option['value']); ?>"<?php if ($flexsilder_viewimgcount == $option['value']) : ?> selected="selected"<?php endif; ?>><?php echo esc_attr($option['text']); ?></option>
+					<?php endforeach; ?>
+					</select><br />
+					<?php echo __( '投稿した記事内の対象画像数を指定します。', 'flexslidergallery' ); ?>
 				</td>
 			</tr>
-
 		</table>
 
 		<p class="submit">
@@ -227,10 +254,5 @@ function flexslidertopgallery_admin_page() {
 
 </div>
 <?php
-echo $flexsilder_categoryid;
-echo $flexsilder_topheight;
-echo '<pre>';
-var_dump($flexsilder_topwidth);
-echo '</pre>';
 }
 ?>
