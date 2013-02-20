@@ -25,13 +25,12 @@ function flexslider_gallery_top() {
 
 global $wp_query;
 $wp_query = new WP_Query(array(
-	'category' => '12',
+	'category' => get_option('flexslidertopgallery_categoryid'),
 	'post_type'=> 'post',
 	'posts_per_page'=> get_option('flexslidertopgallery_viewcount')
 	));
 
 global $post;
-while ( have_posts() ) : the_post();
 $fimages = get_children( array(
 	'post_parent' => $post->ID,
 	'post_type' => 'attachment',
@@ -40,33 +39,13 @@ $fimages = get_children( array(
 	'numberposts' => 999
 	));
 
-if( count( $fimages )>0 ) {
-  $fimage = array_shift( $fimages );
-  $image_src = wp_get_attachment_image_src( $fimage->ID, 'flexslider_topimg' );
-  echo '<img width="'.$image_src[1].'" heifht="'.$image_src[2].'" src="'.$image_src[0].'">';
-echo '<pre>';
-var_dump($image_src);
-echo '</pre>';
-}
-endwhile;
 
-	$images = get_posts(array(
-		'post_parent' => '549',//記事IDで絞る
-		//'category' => '549',
-		//'include' => ,
-		//'exclude' => null,
-		'post_type' => 'attachment',
-		'orderby' => 'rand',
-		'post_mime_type' => 'image',
-		'posts_per_page' => get_option('flexslidertopgallery_viewcount')
-	));
-
-	foreach ($images as $image) {
+	foreach ($fimages as $image) {
 		$top_attributes = wp_get_attachment_image_src($image->ID,'flexslider_topimg');
 
-//echo '<pre>';
-//var_dump($images);
-//echo '</pre>';
+echo '<pre>';
+var_dump($top_attributes);
+echo '</pre>';
 
 		//サムネイル画像の表示部分
 		$flexslidertopgalleryoutput .= '<li>';
