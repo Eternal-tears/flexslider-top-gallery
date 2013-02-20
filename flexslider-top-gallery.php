@@ -25,23 +25,30 @@ function flexslider_gallery_top() {
 
 global $wp_query;
 $wp_query = new WP_Query(array(
-	'category' => get_option('flexslidertopgallery_categoryid'),
+	'cat' => '12',
+	//'post__in' => array(get_option('flexslidertopgallery_includepost')),
+	//'post__not_in' => array(get_option('flexslidertopgallery_excludepost')),
 	'post_type'=> 'post',
+	'orderby' => 'rand',
 	'posts_per_page'=> get_option('flexslidertopgallery_viewcount')
 	));
 
 global $post;
-$fimages = get_children( array(
+
+while ( have_posts() ) : the_post();
+
+	$fimages = get_children( array(
 	'post_parent' => $post->ID,
 	'post_type' => 'attachment',
 	'post_mime_type' => 'image',
+	//'posts_per_page'=> 999
 	'orderby' => 'rand',
-	'numberposts' => 999
+	'posts_per_page'=> get_option('flexslidertopgallery_viewcount')
 	));
-
 
 	foreach ($fimages as $image) {
 		$top_attributes = wp_get_attachment_image_src($image->ID,'flexslider_topimg');
+		//$top_attributes = array_rand($top_attributes1,get_option('flexslidertopgallery_viewcount'));
 
 echo '<pre>';
 var_dump($top_attributes);
@@ -56,6 +63,8 @@ echo '</pre>';
 		$flexslidertopgalleryoutput .= ' /></li>' . "\n";
 
 	}
+
+endwhile;
 
 	if (!empty($flexslidertopgalleryoutput)) {
 		$flexslidertopgalleryoutput = '<ul class="slides">' . "\n"
